@@ -1,24 +1,64 @@
-import logo from './logo.svg';
-import './App.css';
+import axios from 'axios';
+import { useEffect, useState } from 'react';
+import { getDate } from './utils';
 
 function App() {
+  const [date, setDate] = useState(() => getDate());
+  const [picture, setPicture] = useState({});
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    setError(null);
+    axios
+      .get('https://api.nasa.gov/planetary/apod', {
+        params: {
+          api_key: 'VMc6vn7fWrSwYcamqeVQbKEYAdUpYrIPvuDolC7S',
+          date,
+        },
+      })
+      .then(
+        ({ data }) => setPicture(data),
+        ({ response }) => setError(response.data)
+      );
+  }, [date]);
+
+  let errorMessage = '';
+  if (error) {
+    switch (error.code) {
+      case 400:
+        errorMessage = 'Invalid date';
+        break;
+      default:
+        errorMessage = 'There was an error, please try again';
+    }
+  }
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
+    <>
+      <header>
+        <h1>NASA APOD</h1>
       </header>
-    </div>
+      <main>
+        <input
+          value={date}
+          onChange={(evt) => setDate(evt.target.value)}
+          type="date"
+          placeholder="select date"
+        />
+        {error ? (
+          <p>{errorMessage}</p>
+        ) : (
+          <>
+            <h3 data-testid="title">{picture.title}</h3>
+            <img src={picture.url} alt={`picture of the day ${picture.date}`} />
+            <p data-testid="explanation">{picture.explanation}</p>
+          </>
+        )}
+      </main>
+      <footer>
+        <p>Project created during Wizeline Academy React Testing Bootcamp</p>
+      </footer>
+    </>
   );
 }
 
